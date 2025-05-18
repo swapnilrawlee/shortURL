@@ -22,7 +22,7 @@ export default function Home() {
       const payload: any = { url: longUrl };
       if (customAlias.trim()) payload.custom_alias = customAlias.trim();
 
-      const res = await axios.post('http://localhost:4000/longUrl', payload);
+      const res = await axios.post('https://shorturl-backend-d11r.onrender.com/longUrl', payload);
       setShortUrl(res.data.shortUrl);
       setQrCode(res.data.qrCode);
     } catch (err: any) {
