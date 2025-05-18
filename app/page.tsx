@@ -1,103 +1,160 @@
-import Image from "next/image";
+'use client'
+import axios from 'axios';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [longUrl, setLongUrl] = useState('');
+  const [customAlias, setCustomAlias] = useState('');
+  const [shortUrl, setShortUrl] = useState('');
+  const [qrCode, setQrCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setShortUrl('');
+    setQrCode('');
+    setError('');
+
+    try {
+      const payload: any = { url: longUrl };
+      if (customAlias.trim()) payload.custom_alias = customAlias.trim();
+
+      const res = await axios.post('http://localhost:4000/longUrl', payload);
+      setShortUrl(res.data.shortUrl);
+      setQrCode(res.data.qrCode);
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Could not shorten the URL. Try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="flex min-h-screen dlex-col  items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 px-4 py-12 gap-10">
+      {/* Form Container */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md p-8 bg-white bg-opacity-90 rounded-2xl shadow-2xl"
+      >
+        <h1 className="text-3xl font-bold mb-6 text-center text-indigo-800">
+          Shorten Your URL
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <motion.input
+            type="url"
+            value={longUrl}
+            onChange={(e) => setLongUrl(e.target.value)}
+            placeholder="Enter long URL..."
+            required
+            className="w-full p-4 border text-black border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            whileFocus={{ scale: 1.03, boxShadow: "0 0 8px rgba(99, 102, 241, 0.8)" }}
+          />
+
+          <motion.input
+            type="text"
+            value={customAlias}
+            onChange={(e) => setCustomAlias(e.target.value)}
+            placeholder="Custom alias (optional)"
+            className="w-full p-4 border text-black border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            whileFocus={{ scale: 1.03, boxShadow: "0 0 8px rgba(99, 102, 241, 0.8)" }}
+          />
+
+          <motion.button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 active:scale-95 flex items-center justify-center gap-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            {loading ? (
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+            ) : (
+              'Shorten'
+            )}
+          </motion.button>
+        </form>
+
+        {/* Error Message inside form card */}
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              key="error"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              className="mt-6 text-center text-red-600 font-semibold select-none"
+              style={{ userSelect: 'none' }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Results Container - separate card */}
+      <AnimatePresence>
+        {(shortUrl || qrCode) && (
+          <motion.div
+            key="results"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.4 }}
+            className="w-full max-w-md p-6 bg-white bg-opacity-90 rounded-2xl shadow-lg flex flex-col items-center gap-6"
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            {shortUrl && (
+              <div className="text-indigo-800 text-center">
+                <p className="mb-2 font-semibold">Short URL:</p>
+                <a
+                  href={shortUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline break-words text-lg"
+                >
+                  {shortUrl}
+                </a>
+              </div>
+            )}
+
+            {qrCode && (
+              <img
+                src={qrCode}
+                alt="QR Code for short URL"
+                className="w-40 h-40 rounded-lg shadow-lg"
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
   );
 }
